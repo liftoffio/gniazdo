@@ -143,8 +143,11 @@
 
 (defn- connect-helper
   [^URI uri opts]
-  (let [client (client uri)]
+  (let [client (client uri)
+        max-text-message-size (:max-text-message-size opts)]
     (try
+      (when max-text-message-size
+        (.setMaxTextMessageSize (.getPolicy client) max-text-message-size))
       (.start client)
       (->> (assoc opts ::cleanup #(.stop client))
            (connect-with-client client uri))
@@ -156,7 +159,7 @@
   "Connects to a WebSocket at a given URI (e.g. ws://example.org:1234/socket)."
   {:style/indent 1}
   [uri & {:keys [on-connect on-receive on-binary on-error on-close headers client
-                 subprotocols extensions]
+                 subprotocols extensions max-text-message-size]
           :as opts}]
   (let [uri' (URI. uri)]
     (if client
